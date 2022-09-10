@@ -384,7 +384,7 @@ Debian_build() {
 	sed -e "s|KERNEL=|KERNEL=${KERNEL}|" -i ${TMP_DIR}/chroot_scripts/package_debian
 	chmod +x ${TMP_DIR}/chroot_scripts/package_debian
 	xterm -T 'OS configuration' -geometry 190x180+90-20 -e 'chroot '${MNTROOTFS}' '${TMP_DIR}'/chroot_scripts/package_debian'
-	xterm -T 'debuging' -geometry 210x200+100-10 -e 'chroot '${MNTROOTFS}' /bin/bash'
+	# xterm -T 'debuging' -geometry 210x200+100-10 -e 'chroot '${MNTROOTFS}' /bin/bash'
 	
 }
 
@@ -511,17 +511,17 @@ if [[ -n $KERNEL ]];then
 	cp -r $(pwd)/os_items ${TMP_DIR}
 	sed -e '4i\RPIUSER='"$RPIUSER"'\nHOSTNAME_RPI='"$HOSTNAME_RPI"'' -i ${TMP_DIR}/chroot_scripts/package_debian
 
- 	Debian_build 80M 1050M
+ 	Debian_build 70M 960M
 	pre_kernel_compile
 
 	[[ ! -f ${WRKDIR}/raspberrypi/linux/arch/${KARCH}/boot/${KERNEL_IMG} ]] && kernel_compile 
 
 	echo -en "Installing the kernel ...\n\n"
 	cp ${WRKDIR}/raspberrypi/linux/arch/${KARCH}/boot/${KERNEL_IMG} ${MNTBOOT}${KERNEL}.img
-    [[ ${KARCH} == "arm" ]] && cp ${WRKDIR}/raspberrypi/linux/arch/${KARCH}/boot/dts/*.dtb ${MNTBOOT}
+    	[[ ${KARCH} == "arm" ]] && cp ${WRKDIR}/raspberrypi/linux/arch/${KARCH}/boot/dts/*.dtb ${MNTBOOT}
 	[[ ${KARCH} == "arm64" ]] && cp ${WRKDIR}/raspberrypi/linux/arch/${KARCH}/boot/dts/broadcom/*.dtb ${MNTBOOT}
-    cd ${WRKDIR}/raspberrypi/linux
-    make ARCH=${KARCH} CROSS_COMPILE=${CROSS_COMPILER} INSTALL_MOD_PATH=${MNTROOTFS} modules_install -j ${JOBS} &> /dev/null
+    	cd ${WRKDIR}/raspberrypi/linux
+    	make ARCH=${KARCH} CROSS_COMPILE=${CROSS_COMPILER} INSTALL_MOD_PATH=${MNTROOTFS} modules_install -j ${JOBS} &> /dev/null
 	
 else
 
