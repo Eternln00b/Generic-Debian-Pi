@@ -14,7 +14,7 @@ LOCALE="en_US.${STANDARD}"
 ###########
 
 WRKDIR=$(pwd)/externals
-OUTPUT_IMG_DIR=${WRKDIR}/image
+OUTPUT_IMG_DIR=$(pwd)/image
 MNTRAMDISK=/mnt/ramdisk/
 MNTROOTFS=/mnt/rpi-rootfs/
 MNTBOOT=${MNTROOTFS}boot/
