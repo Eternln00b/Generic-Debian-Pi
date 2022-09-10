@@ -1,0 +1,25 @@
+########################
+### Main OS Settings ###
+########################
+
+RPIUSER=pi
+PASSWORD=raspberry
+HOSTNAME_RPI=a404dded
+STANDARD="UTF-8"
+LOCALE="en_US.${STANDARD}"
+# KEYBOARD=true
+
+###########
+### IMG ###
+###########
+
+WRKDIR=$(pwd)/externals
+OUTPUT_IMG_DIR=${WRKDIR}/image
+MNTRAMDISK=/mnt/ramdisk/
+MNTROOTFS=/mnt/rpi-rootfs/
+MNTBOOT=${MNTROOTFS}boot/
+TMP_DIR=/tmp/Debian_Rpi
+APT_SOURCE="http://deb.debian.org/debian/"
+KEYRING="/usr/share/keyrings/debian-archive-keyring.gpg"
+RELEASE="bullseye"
+PROCS=$(nproc)

@@ -1,0 +1,219 @@
+#!/bin/bash
+
+OS_ARCH=$(uname -p)
+
+###########################
+### Packages & Settings ###
+###########################
+
+################
+### Packages ###
+################
+
+if [[ "$(id -u)" -ne 0 || ${OS_ARCH} == "x86_64" && "$(stat -c %d:%i /)" == "$(stat -c %d:%i /proc/1/root/.)" ]]; then
+
+	echo "you are not in the chroot !"
+	exit 0
+
+fi
+
+touch /etc/apt/sources.list
+OS_ITEMS_DIR=/tmp/Debian_Rpi/os_items/
+
+source /tmp/Debian_Rpi/exported-variables
+
+/bin/cat /dev/null > /etc/apt/sources.list
+/bin/cat <<etc_apt_sources_list >> /etc/apt/sources.list
+deb ${APT_SOURCE} ${RELEASE} main contrib non-free
+deb-src ${APT_SOURCE} ${RELEASE} main contrib non-free
+
+deb http://security.debian.org/debian-security ${RELEASE}-security main contrib non-free
+deb-src http://security.debian.org/debian-security ${RELEASE}-security main contrib non-free
+
+deb ${APT_SOURCE} ${RELEASE}-updates main contrib non-free
+deb-src ${APT_SOURCE} ${RELEASE}-updates main contrib non-free
+
+etc_apt_sources_list
+
+list_to_install="bash-completion build-essential crda dhcpcd5 dnsutils fake-hwclock git ifupdown iproute2 iputils-ping  
+isc-dhcp-client isc-dhcp-common iw kmod libnl-3-200 libnl-genl-3-200 libnl-route-3-200 libssl-dev lsb-base lsb-release  
+neofetch psmisc python rsync tar tcpd udev usbutils util-linux"
+
+echo -en "\nOS update\n" 		     	
+apt -y update >/dev/null 2>&1
+echo -en "\nPre-settings before the packages installation ...\n\n"
+apt -y remove --purge -qq -o=Dpkg::Use-Pty=0 rsyslog >/dev/null 2>&1
+apt -y install --no-install-recommends -qq -o=Dpkg::Use-Pty=0 busybox-syslogd >/dev/null 2>&1
+apt -y install --no-install-recommends -qq -o=Dpkg::Use-Pty=0 locales tzdata >/dev/null 2>&1
+echo "Etc/Universal" >/etc/timezone
+dpkg-reconfigure --frontend=noninteractive tzdata 2>/dev/null
+
+if [[ ${KEYBOARD} = true ]];then
+
+	dpkg-reconfigure locales 2>/dev/null
+	apt -y install --no-install-recommends -qq -o=Dpkg::Use-Pty=0 console-common console-data console-setup-linux console-setup 2>/dev/null
+
+else
+
+	sed -e "s|# ${LOCALE} ${STANDARD}|${LOCALE} ${STANDARD}|" -i /etc/locale.gen
+	debconf-set-selections <<< 'locales locales/default_environment_locale select '${LOCALE}''
+	rm -rf /etc/default/locale
+	dpkg-reconfigure --frontend=noninteractive locales >/dev/null 2>&1
+	update-locale LANGUAGE=''${LOCALE//.${STANDARD}}:${LOCALE//_US.${STANDARD}}'' >/dev/null 2>&1
+	update-locale LANG=''${LOCALE}'' >/dev/null 2>&1
+	
+fi
+
+apt -y install --reinstall -qq -o=Dpkg::Use-Pty=0 dbus >/dev/null 2>&1
+echo -en "\nPackages installation for the OS and update ...\n\n"
+apt -y install --no-install-recommends -qq -o=Dpkg::Use-Pty=0 ${list_to_install} >/dev/null 2>&1
+apt -y upgrade -qq -o=Dpkg::Use-Pty=0 >/dev/null 2>&1
+
+echo -en "adding the ssh user \"${RPIUSER}\"\n"
+useradd -s /bin/bash -G sudo,adm,netdev,www-data -m ${RPIUSER}
+echo "${RPIUSER}:${PASSWORD}" | chpasswd
+
+sed -i 's/#force_color_prompt=yes/force_color_prompt=yes/g' /home/$(id -nu 1000)/.bashrc
+swapoff -a
+
+################
+### Settings ###
+################
+
+mkdir -p /etc/network
+
+# /etc/hostname
+rm -rf /etc/{hostname,hosts} /lost+found
+echo ${HOSTNAME_RPI} >> /etc/hostname
+
+# /etc/hosts
+
+/bin/cat /dev/null > /etc/hosts
+/bin/cat <<hosts >> /etc/hosts
+::1 		localhost localhost.localdomain ${HOSTNAME_RPI}.localdomain
+127.0.0.1 	localhost localhost.localdomain ${HOSTNAME_RPI}.localdomain
+127.0.1.1	${HOSTNAME_RPI}
+
+# The following lines are desirable for IPv6 capable hosts
+::1			ip6-localhost ip6-loopback
+fe00::0		ip6-localnet
+ff00::0		ip6-mcastprefix
+ff02::1		ip6-allnodes
+ff02::2		ip6-allrouters
+
+hosts
+
+# Don't wait forever and a day for the network to come online
+if [ -s /lib/systemd/system/networking.service ]; then
+
+	sed -i -e "s/TimeoutStartSec=5min/TimeoutStartSec=5sec/" /lib/systemd/system/networking.service
+
+fi
+
+if [ -s /lib/systemd/system/ifup@.service ]; then
+
+	echo "TimeoutStopSec=5s" >> /lib/systemd/system/ifup@.service
+
+fi
+
+# /etc/fstab
+
+/bin/cat /dev/null > /etc/fstab
+/bin/cat <<etc_fstab >> /etc/fstab
+########
+## OS ##
+########
+
+proc				/proc       proc    defaults                        0       0
+/dev/mmcblk0p1  	/boot       vfat    defaults,ro                     0       2
+/dev/mmcblk0p2  	/           ext4    defaults,nodiratime,noatime     0       1
+
+############
+### /tmp ###
+############
+
+tmpfs     /tmp        tmpfs   nodiratime,noatime,nodev,nosuid,size=8M     0       0
+
+etc_fstab
+
+# /etc/journald.conf 
+
+/bin/cat /dev/null > /etc/systemd/journald.conf
+/bin/cat <<journald_conf >> /etc/systemd/journald.conf
+[Journal]
+Storage=volatile
+Compress=yes
+
+journald_conf
+
+# /etc/interfaces 
+
+/bin/cat /dev/null > /etc/network/interfaces
+/bin/cat <<etc_network_interfaces >> /etc/network/interfaces
+source-directory /etc/network/interfaces.d
+
+etc_network_interfaces
+chmod 0600 /etc/network/interfaces
+
+systemctl enable sshd.service 
+systemctl disable cron
+systemctl mask cron
+
+# /boot 
+
+KERNEL=
+CMDLINE="dwc_otg.lpm_enable=0 console=ttyAMA0,115200 console=tty1 root=/dev/mmcblk0p2 rootfstype=ext4 cgroup_enable=memory elevator=deadline rootwait\n"
+
+echo -en "${CMDLINE}" >> /boot/cmdline.txt
+echo -en "kernel=${KERNEL}.img\nenable_uart=1\n" >> /boot/config.txt
+echo 
+
+##########################################################
+### fake-hwclock1h #######################################
+##########################################################
+
+###############
+### Scripts ###
+###############
+
+source ${OS_ITEMS_DIR}/scripts
+echo "enabling the script:/sbin/fake-hwclock1h"
+chmod 0755 /sbin/fake-hwclock1h
+
+################
+### Services ###
+################
+
+source ${OS_ITEMS_DIR}/services
+echo "installing the service:fake-hwclock1h"
+ln -s /lib/systemd/system/fake-hwclock1h.service /etc/systemd/system/fake-hwclock1h.service
+chmod 0644 /lib/systemd/system/fake-hwclock1h.service
+systemctl enable fake-hwclock1h.service
+
+##############
+### Timers ###
+##############
+
+source ${OS_ITEMS_DIR}/timers
+echo "installing the timer:fake-hwclock1h"
+ln -s /lib/systemd/system/fake-hwclock1h.timer /etc/systemd/system/fake-hwclock1h.timer
+chmod 0644 /lib/systemd/system/fake-hwclock1h.timer
+systemctl enable fake-hwclock1h.timer
+
+##########################################################
+## cleaning environment ##################################
+##########################################################
+
+logs=$(find /var/log -type f)
+for file in $logs
+do
+
+	> $file
+
+done
+
+apt clean -y -qq -o=Dpkg::Use-Pty=0 >/dev/null 2>&1
+apt autoclean -y -qq -o=Dpkg::Use-Pty=0 >/dev/null 2>&1
+apt autoremove -y -qq -o=Dpkg::Use-Pty=0 >/dev/null 2>&1
+rm -rf /home/$(id -nu 1000)/.bash_history
+touch /home/$(id -nu 1000)/.bash_history

@@ -1,0 +1,33 @@
+###############
+### Scripts ###
+###############
+
+# /sbin/fake-hwclock1h
+
+rm -rf /etc/cron.hourly/fake-hwclock
+
+/bin/cat /dev/null > /sbin/fake-hwclock1h
+/bin/cat <<fake_hwclock >> /sbin/fake-hwclock1h
+#!/bin/bash
+
+if [[ \$(id -u) -ne 0 ]];then
+
+	echo "only root can save the clock"
+
+else
+
+	if [[ ! -w / ]]; then
+
+		mount -o rw,remount / 
+		/sbin/fake-hwclock save
+		mount -o ro,remount / 
+
+	else
+
+		/sbin/fake-hwclock save
+
+	fi
+
+fi
+
+fake_hwclock

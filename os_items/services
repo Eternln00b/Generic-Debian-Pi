@@ -1,0 +1,21 @@
+################
+### Services ###
+################
+
+# fake-hwclock1h.service
+
+/bin/cat /dev/null > /lib/systemd/system/fake-hwclock1h.service
+/bin/cat <<fake_hwclock1h >> /lib/systemd/system/fake-hwclock1h.service
+[Unit]
+Description=write hardware clock every hour
+Wants=network.target local-fs.target
+After=network.target local-fs.target
+
+[Service]
+Type=simple        
+ExecStart=/sbin/fake-hwclock1h
+
+[Install]
+WantedBy=multi-user.target 
+
+fake_hwclock1h

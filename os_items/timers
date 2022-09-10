@@ -1,0 +1,19 @@
+##############
+### Timers ###
+##############
+
+# fake-hwclock1h.timer
+
+/bin/cat /dev/null > /lib/systemd/system/fake-hwclock1h.timer
+/bin/cat <<fake_hwclock1h_timer >> /lib/systemd/system/fake-hwclock1h.timer
+[Unit]
+Description=write hardware clock every hour
+
+[Timer]
+OnBootSec=0min
+OnUnitActiveSec=1h
+
+[Install]
+WantedBy=multi-user.target fake-hwclock1h.service
+
+fake_hwclock1h_timer
