@@ -31,8 +31,8 @@ finish () {
 
 	fi
 
-	chown -R $(id -nu 1000):$(id -nu 1000) ${WRKDIR}
-	chmod -R 0755 ${WRKDIR}
+	chown -R $(id -nu 1000):$(id -nu 1000) ${WRKDIR} ${OUTPUT_IMG_DIR}
+	chmod -R 0755 ${WRKDIR} ${OUTPUT_IMG_DIR}
 
 }
 
