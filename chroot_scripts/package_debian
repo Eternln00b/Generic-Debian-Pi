@@ -46,7 +46,6 @@ apt -y remove --purge -qq -o=Dpkg::Use-Pty=0 rsyslog >/dev/null 2>&1
 apt -y install --no-install-recommends -qq -o=Dpkg::Use-Pty=0 busybox-syslogd >/dev/null 2>&1
 apt -y install --no-install-recommends -qq -o=Dpkg::Use-Pty=0 locales tzdata >/dev/null 2>&1
 echo "Etc/Universal" >/etc/timezone
-dpkg-reconfigure --frontend=noninteractive tzdata 2>/dev/null
 
 if [[ ${KEYBOARD} = true ]];then
 
@@ -64,6 +63,7 @@ else
 	
 fi
 
+dpkg-reconfigure --frontend=noninteractive tzdata 2>/dev/null
 apt -y install --reinstall -qq -o=Dpkg::Use-Pty=0 dbus >/dev/null 2>&1
 echo -en "\nPackages installation for the OS and update ...\n\n"
 apt -y install --no-install-recommends -qq -o=Dpkg::Use-Pty=0 ${list_to_install} >/dev/null 2>&1
