@@ -35,9 +35,9 @@ deb-src ${APT_SOURCE} ${RELEASE}-updates main contrib non-free
 
 etc_apt_sources_list
 
-list_to_install="bash-completion build-essential crda dhcpcd5 dnsutils fake-hwclock git ifupdown iproute2 iputils-ping  
-isc-dhcp-client isc-dhcp-common iw kmod libnl-3-200 libnl-genl-3-200 libnl-route-3-200 libssl-dev lsb-base lsb-release  
-psmisc python rsync tar tcpd udev usbutils util-linux"
+list_to_install="bash-completion crda dhcpcd5 dnsutils fake-hwclock git ifupdown iproute2 iputils-ping isc-dhcp-client 
+isc-dhcp-common iw kmod libnl-3-200 libnl-genl-3-200 libnl-route-3-200 libssl-dev lsb-base lsb-release psmisc python 
+rsync tar tcpd udev usbutils util-linux"
 
 echo -en "\nOS update\n" 		     	
 apt -y update >/dev/null 2>&1
