@@ -158,8 +158,15 @@ etc_network_interfaces
 chmod 0600 /etc/network/interfaces
 
 systemctl enable sshd.service 
-systemctl disable cron
-systemctl mask cron
+
+services=("cron" "fake-hwclock")
+for service in "${services[@]}"
+do
+
+	systemctl disable ${service}
+	systemctl mask ${service}
+
+done
 
 # /boot 
 
