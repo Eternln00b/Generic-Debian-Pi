@@ -45,7 +45,6 @@ echo -en "\nPre-settings before the packages installation ...\n\n"
 apt -y remove --purge -qq -o=Dpkg::Use-Pty=0 rsyslog >/dev/null 2>&1
 apt -y install --no-install-recommends -qq -o=Dpkg::Use-Pty=0 busybox-syslogd >/dev/null 2>&1
 apt -y install --no-install-recommends -qq -o=Dpkg::Use-Pty=0 locales tzdata >/dev/null 2>&1
-echo "Etc/Universal" >/etc/timezone
 
 if [[ ${KEYBOARD} = true ]];then
 
@@ -63,10 +62,13 @@ else
 	
 fi
 
+echo "Etc/Universal" >/etc/timezone
 dpkg-reconfigure --frontend=noninteractive tzdata 2>/dev/null
 apt -y install --reinstall -qq -o=Dpkg::Use-Pty=0 dbus >/dev/null 2>&1
 echo -en "\nPackages installation for the OS and update ...\n\n"
 apt -y install --no-install-recommends -qq -o=Dpkg::Use-Pty=0 ${list_to_install} >/dev/null 2>&1
+rm -rf /var/lib/apt/lists/lock /var/cache/apt/archives/lock /var/lib/dpkg/updates/*  
+apt -y update -qq -o=Dpkg::Use-Pty=0 >/dev/null 2>&1
 apt -y upgrade -qq -o=Dpkg::Use-Pty=0 >/dev/null 2>&1
 
 echo -en "adding the ssh user \"${RPIUSER}\"\n"
