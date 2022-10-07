@@ -85,7 +85,7 @@ swapoff -a
 mkdir -p /etc/network
 
 # /etc/hostname
-rm -rf /etc/{hostname,hosts} /lost+found
+rm -rf /etc/{hostname,hosts} /etc/cron.hourly/fake-hwclock /lost+found
 echo ${HOSTNAME_RPI} >> /etc/hostname
 
 # /etc/hosts
